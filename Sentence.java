@@ -5,7 +5,7 @@ public class Sentence {
 	private int index=0;
 	private int maxIndex=0;
 	
-	
+	//TODO
 	Sentence(String str)
 	{
 		this.words=str.split(" ");

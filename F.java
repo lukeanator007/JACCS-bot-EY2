@@ -6,10 +6,10 @@ public class F {
 			'Q','W','E','R','T','Y','U','I','O','P','A','S','D','F','G','H','J','K','L','Z','X','C','V','B','N','M'};
 	
 	/**
-	 * char and returns true if it a letter
+	 * takes a char and returns true if it is a letter
 	 * 
-	 * @param in
-	 * @return
+	 * @param in char to rest
+	 * @return true if in is a letter, false otherwise
 	 */
 	public static boolean isLetter(char in) 
 	{
@@ -25,7 +25,11 @@ public class F {
 		return false;
 	}
 	
-	
+	/**
+	 * checks if a char is a lower-case letter
+	 * @param in char to check
+	 * @return true if in is a lower-case letter and false otherwise
+	 */
 	public static boolean isLowerCase(char in) 
 	{
 		for(int i=0;i<26;i++) 
@@ -41,10 +45,10 @@ public class F {
 	
 	
 	/**
+	 * removes all non lower-case letters in a given string. Does not modify the given string
 	 * 
-	 * @param 
-	 * @return 
-	 * @return returns all lowercase letters in the given string in the same order
+	 * @param str string to remove characters from
+	 * @return returns all lower-case letters in the given string in the same order
 	 */
 	public static String letterClean(String str) 
 	{
@@ -108,7 +112,10 @@ public class F {
 	
 	
 	
-	
+	/**
+	 * logs an object, used for convenience 
+	 * @param obj to System.Out.Println()
+	 */
 	public static void log(Object obj) 
 	{
 		if(obj!=null) {
@@ -121,6 +128,11 @@ public class F {
 			
 	}
 	
+	/**
+	 * takes an object array and prints each element in order
+	 * starts the logging with "Array Start" and ends with "Array End"
+	 * @param array array to log
+	 */
 	public static void logArray(Object[] array) 
 	{
 		log("Array Start");
@@ -134,8 +146,10 @@ public class F {
 	
 	
 	/**
+	 * changes the first letter in a given string to upper-case, unless it is already upper-case.
+	 * does not modify the existing string
 	 * 
-	 * @param str
+	 * @param str string to change first letter
 	 * @return str with the first letter changed to upper case, unless it is already a capital, in which case return str
 	 */
 	public static String firstLetterToUpperCase(String str) 
@@ -162,7 +176,7 @@ public class F {
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
-					F.log("firstlettertouppercaseerror "+str);
+					F.log("firstLetterToUpperCaseError "+str);
 				}
 			}
 				

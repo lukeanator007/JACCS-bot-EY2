@@ -11,7 +11,13 @@ import java.util.Queue;
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 
-
+/**
+ * corrects the capitalisation for yugioh psct
+ * Throughout "capsed" is used as an abbreviation for capitalised
+ * 
+ * @author luke
+ *
+ */
 public class PsctCaps extends Command{
 	
 	private String[] words=new String[] {"Deck", "Tribute", "Tributed", "Tuner", "Gemini", "Toon", "Spirit", "Union",
@@ -67,6 +73,7 @@ public class PsctCaps extends Command{
 		HashSet<String> counterNames=commands.getCounterNames();
 		for(String name:counterNames) 
 		{
+			//counter names have $$ instead of spaces as specified by the command help command
 			String tempStr=name+"$$Counter";
 			String[] tempStrArr=tempStr.split("\\$\\$");
 			for(int i=0;i<tempStrArr.length;i++) 
@@ -76,7 +83,7 @@ public class PsctCaps extends Command{
 			this.counters.add(tempStrArr);
 		}
 		
-		//conjunctions
+		
 		this.noReasons=commands.isNoReasons();
 		
 		
@@ -113,7 +120,7 @@ public class PsctCaps extends Command{
 		int checkNotTrap=textCheck.indexOf("this card is not treated as a trap card");
 		while(checkNotTrap>-1) 
 		{
-			int spaceCount=3;//start at the amount added due to only not being capsed
+			int spaceCount=3;//start at the amount added due to only "not" being capsed
 			for(int i=0;i<checkNotTrap;i++) 
 			{
 				if(text.charAt(i)==' ') spaceCount++;
@@ -130,9 +137,9 @@ public class PsctCaps extends Command{
 		text=text.replaceAll("-", "::-::");
 		text=text.replaceAll("/", "::/::");
 		cleaned = text.split(" ");
+		//cleaned removes most punctuation, leaving just the words and important punctuation, here "-" and "/"
 		
-		
-		//remove start end end punctuation
+		//remove start and end punctuation
 		for( int i= 0 ; i<cleaned.length;i++) 
 		{
 			cleaned[i]=F.clean(cleaned[i]);
@@ -160,7 +167,8 @@ public class PsctCaps extends Command{
 
 		
 		
-		Queue<String[]> cardTypeReplace=new LinkedList<String[]>();//cleaned,raw
+		Queue<String[]> cardTypeReplace=new LinkedList<String[]>();//instances of card type are added here and handled later
+		//entries are in the format {cleaned string,raw string}
 		
 		
 		for(int i=0;i<raw.length;i++) 
@@ -179,7 +187,7 @@ public class PsctCaps extends Command{
 					raw[i]=null;
 					raw[i+1]=null;
 					cardTest=true;
-					
+					//setting to null prevents interference from other parts in the method
 				}
 				
 			}
@@ -192,7 +200,7 @@ public class PsctCaps extends Command{
 			{
 				try 
 				{
-					if(raw[i+2].startsWith("(")) 
+					if(raw[i+2].startsWith("(")) //if a bracketed list follows card type, caps them all, except "or"
 					{
 						int whileLoop=2;
 						toCapsIndex.add(new encode(F.firstLetterToUpperCase(cleaned[i+whileLoop].toLowerCase()), i+whileLoop, 6));
@@ -219,7 +227,7 @@ public class PsctCaps extends Command{
 		
 		
 		
-		
+		//main loop to detect things that should be capsed
 		for (int i =0; i<raw.length;i++) 
 		{
 			
@@ -228,7 +236,7 @@ public class PsctCaps extends Command{
 				continue;
 			}
 			
-			boolean AllCapsTest=false;
+			boolean AllCapsTest=false;//if the i'th word should be in all caps 
 			for (int j=0;j<this.attributes.length;j++) 
 			{
 				if(cleaned[i].equalsIgnoreCase(this.attributes[j])) 
@@ -250,10 +258,11 @@ public class PsctCaps extends Command{
 					AllCapsTest=true;
 				}
 			}
-			
+			//TODO reduce usage of try catch blocks
+			//prevent all capsed words getting first letter only capsed
 			if(AllCapsTest) continue;
 			
-			
+			//caps words following . : or ●
 			if(i>0) 
 			{
 				if(raw[i-1]!=null) 
@@ -284,13 +293,13 @@ public class PsctCaps extends Command{
 			}
 			
 			
-			
+			// \n is at the start of words due to how the split was set up
 			if(raw[i].indexOf("\n")>-1) 
 			{
 				toCapsIndex.add(new encode(F.firstLetterToUpperCase(raw[i].toLowerCase()), i, -1));
 			}
 			
-			
+			//check basic words and types
 			for (int j=0; j<words.length;j++) 
 			{
 				if(cleaned[i].equalsIgnoreCase(words[j]))
@@ -306,6 +315,7 @@ public class PsctCaps extends Command{
 				}
 			}	
 			
+			//check for pairs of words
 			for (int j =0;j<this.pairs.length;j++) 
 			{
 				boolean test =true;
@@ -342,6 +352,7 @@ public class PsctCaps extends Command{
 				
 			}
 			
+			//check for user given counters
 			for(String[] counter:this.counters) 
 			{
 				boolean test =true;
@@ -381,7 +392,7 @@ public class PsctCaps extends Command{
 			
 			
 			
-			//card type handling
+			//card type handling (the words that are card types, not "card type")
 			for(int j=0;j<this.cardTypeEndings.length;j++) 
 			{
 				boolean test1=false;
@@ -406,7 +417,7 @@ public class PsctCaps extends Command{
 						}
 					}
 					
-					if(test1) 
+					if(test1)//go backwards and check for a comma separated list 
 					{
 						try {
 							if(cleaned[i-2].equalsIgnoreCase("or")) 
@@ -432,6 +443,7 @@ public class PsctCaps extends Command{
 				}
 			}
 			
+			//TODO make better
 			boolean test2=false;
 			if(cleaned[i].equalsIgnoreCase("phase")) 
 			{
@@ -479,6 +491,7 @@ public class PsctCaps extends Command{
 			
 		}
 		
+		//add words wrapped in quotes to an ignore list
 		HashSet<Integer> ignoreIndex=new HashSet<Integer>();
 		
 		boolean quoteOn=false;
@@ -486,7 +499,7 @@ public class PsctCaps extends Command{
 		{
 			int temp = 0;
 			if(!(raw[i]!=null)) continue;
-			for(int j=0;j<raw[i].length();j++) 
+			for(int j=0;j<raw[i].length();j++) //words may have 2 or more \" in them
 			{
 				if(raw[i].substring(j).startsWith("\"")) 
 				{
@@ -524,14 +537,14 @@ public class PsctCaps extends Command{
 		}
 		
 		
-
-		boolean[] used=new boolean[cleaned.length];
+		
+		boolean[] used=new boolean[cleaned.length];//if true that index will be ignored
 		for (int i=0;i<used.length;i++) 
 		{
 			used[i]=false;
 		}
-		List<Pair<String, Integer>> reasons=new ArrayList<Pair<String, Integer>>();
-		HashMap<Integer, String> emphIndex=new HashMap<Integer, String>();
+		List<Pair<String, Integer>> reasons=new ArrayList<Pair<String, Integer>>();//string of the word, Integer of the reason code
+		HashMap<Integer, String> emphIndex=new HashMap<Integer, String>();//Integer of the index, string to wrap word in ("*" for italics, "**" for bold)
 		
 		
 		
@@ -556,7 +569,7 @@ public class PsctCaps extends Command{
 		
 		
 		
-		
+		//adjust the ans array with the corrected text and add reasons to the reasons list
 		for(encode data:toCapsIndex) 
 		{
 			
@@ -603,6 +616,7 @@ public class PsctCaps extends Command{
 			ans[integer.intValue()]=emphIndex.get(integer)+ans[integer.intValue()]+emphIndex.get(integer);
 		}
 		
+		//lowercase all incorrectly capsed words
 		for(int i=0;i<used.length;i++) 
 		{
 			if(!used[i]) 
@@ -623,7 +637,7 @@ public class PsctCaps extends Command{
 		String reasonsString="";
 		for(int i =0; i<raw.length;i++) 
 		{
-			if(ans[i].equals("/")||ans[i].equals("-")) 
+			if(ans[i].equals("/")||ans[i].equals("-")) //remove spacing added earlier
 			{
 				txt=txt.substring(0, txt.length()-1);
 				txt=txt+ans[i];
@@ -642,7 +656,7 @@ public class PsctCaps extends Command{
 		}
 		else 
 		{
-			while(true) 
+			while(true) //bubble sort reasons by index
 			{
 				boolean test=false;
 				for(int i=0;i<reasons.size()-1;i++) 
@@ -685,7 +699,9 @@ public class PsctCaps extends Command{
 
 	
 	
-	
+	/**
+	 * resets all object global data used in execute method
+	 */
 	private void resetData() 
 	{
 		this.counters.clear();
@@ -701,16 +717,27 @@ public class PsctCaps extends Command{
 
 
 
-
+	/**
+	 * used to hold the information about words, given that they should be capsed
+	 * also holds information about what reason the word should be capsed for and methods to used for checking information
+	 * 
+	 *
+	 */
 	private class encode
 	{
 		private String word;
 		private int index;
 		private int reasonCode;
 		private String[] words=null;
-		private boolean italics=false;
-		private boolean allCaps=false;
-		
+		private boolean italics=false;//if the word should be in italics
+		private boolean allCaps=false;//if the word should be in all caps
+		/**
+		 * stores information about a 1 word to caps, the reason it should be capsed, its index, and the word that should be capsed
+		 * 
+		 * @param word string from the cleaned array that should be capsed
+		 * @param index the index of the word
+		 * @param reasonCode the int corresponding to the reason that the word should be capsed. see reasonCodeToString method
+		 */
 		encode(String word, int index, int reasonCode) 
 		{
 			this.word=word;
@@ -718,11 +745,21 @@ public class PsctCaps extends Command{
 			this.reasonCode=reasonCode;
 		}
 		
+		/**
+		 * if the word was "type" while cardTypeDetected was true
+		 */
 		public void reasonChangeType() {
 			this.reasonCode=20;
 			
 		}
-
+		/**
+		 * stores information about 1 word in a list or pair to be capsed
+		 * 
+		 * @param words an array with all the words to be capsed
+		 * @param targetWord the specific word to be capsed
+		 * @param index the index of the target word
+		 * @param reasonCode the int corresponding to the reason that the word should be capsed. see reasonCodeToString method
+		 */
 		encode(String[] words, String targetWord, int index, int reasonCode) 
 		{
 			this.words=words.clone();
@@ -742,12 +779,19 @@ public class PsctCaps extends Command{
 			this.allCaps=true;
 		}
 		
-		
+		/**
+		 * returns an Integer, used for adding to the HashMap
+		 * @return this.index
+		 */
 		public Integer addToMapInt() 
 		{
 			return this.index;
 		}
-		
+		/**
+		 * returns the string to wrap the word in if correction is needed
+		 * used to add to the HashMap
+		 * @return 
+		 */
 		public String addToMapString() 
 		{
 			if(this.italics) 
@@ -759,7 +803,10 @@ public class PsctCaps extends Command{
 				return "**";
 			}
 		}
-		
+		/**
+		 * checks if this.word is correctly capsed
+		 * @return true if this word needs changing and false otherwise
+		 */
 		public boolean needsChanging() 
 		{
 			if(this.reasonCode<3) 
@@ -773,7 +820,10 @@ public class PsctCaps extends Command{
 			}
 			
 		} 
-		
+		/**
+		 * returns this.word with corrected capitalisation
+		 * @return the corrected word
+		 */
 		public String correctedWord() 
 		{
 			if(this.allCaps) 
@@ -797,7 +847,10 @@ public class PsctCaps extends Command{
 		
 		
 		
-		
+		/**
+		 * takes this.reasoncode and returns the reason as a string. pairs this string with this.index for use in the set
+		 * @return pair of reasoncode as string and index
+		 */
 		public Pair<String, Integer> reasonCodeToString()
 		{
 			switch(reasonCode) 
@@ -826,6 +879,10 @@ public class PsctCaps extends Command{
 			return Pair.of("reason code="+this.reasonCode,this.index);
 		}
 		
+		/**
+		 * takes the words array and combines it into one string
+		 * @return this.words as one string, with correct spacing
+		 */
 		private String wordsToString() 
 		{
 			String ans="";

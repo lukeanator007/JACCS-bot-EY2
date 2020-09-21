@@ -69,9 +69,10 @@ public class SpellCheck extends Command{
 			return;
 		}
 		text=runCommands(commands, text);
-		String[] tempSplit=text.split("\"");
+		String[] tempSplit=text.split("\"");//ignore text wrapped in \"
 		for(int i=0;i<tempSplit.length;i+=2) 
 		{
+			//pre split handling
 			tempSplit[i]=tempSplit[i].replace('\n', ' ');
 			tempSplit[i]=tempSplit[i].replace('.', ' ');
 			tempSplit[i]=tempSplit[i].replace('-', ' ');

@@ -9,7 +9,7 @@ public class SetCommands extends Command{
 	{
 		this.name="setcommands";
 		this.help="Sets the given command(s) to be your default commands, as if you typed the given command at the start"
-				+ " of each message. Use commandhelp for more information on commands. These commands will be reset when "
+				+ " of each message. Use j!commandhelp for more information on commands. These commands will be reset when "
 				+ "the bot resets, so you may have to re-input them. To remove your default commands use j!delcommands or "
 				+ "give no arguments when using this command.";
 		this.arguments="<commands:[$$command]>";

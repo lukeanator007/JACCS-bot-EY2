@@ -5,11 +5,8 @@ import java.util.HashSet;
 
 public class JaccsCommandHandler {
 
-	/*
-	 * list of commands: no reasons counter type no conjunctions fast spells server
-	 * type? defaults
-	 */
-
+	//list of commands: no reasons, counter type, no conjunctions, fast spells 
+	//TODO server defaults
 	public static String prefix = "$$";
 	public static HashMap<Long, JaccsCommandHandler> userCommands = new HashMap<Long, JaccsCommandHandler>();
 
@@ -20,7 +17,7 @@ public class JaccsCommandHandler {
 	private boolean quickSpells = false;
 	private HashSet<String> names = new HashSet<String>();
 	private HashSet<String> words =new HashSet<String>();
-	private String text = "";
+	private String text = "";//the user input
 
 	JaccsCommandHandler(String commands) throws JaccsCommandException {
 		parseCommands(commands, this);
@@ -29,7 +26,11 @@ public class JaccsCommandHandler {
 	public JaccsCommandHandler() {
 
 	}
-
+	
+	/**
+	 * deep clone constructor, or default if null is given
+	 * @param handler JaccsCommandHandler to deep clone
+	 */
 	public JaccsCommandHandler(JaccsCommandHandler handler) 
 	{
 		if((handler!=null)) 
@@ -44,23 +45,38 @@ public class JaccsCommandHandler {
 	}
 		
 	
-
+	/**
+	 * gets a command handler of the default commands from user id or a default one if they do not have default commands set
+	 * @param id the id of the user
+	 * @return the JaccsCommandHandler associated with this users default commands, or a default JaccsCommandHandler if they have not been set
+	 */
 	public static JaccsCommandHandler getCommandHandler(Long id) {
 		return new JaccsCommandHandler(userCommands.get(id));
 
 	}
 
-	public static JaccsCommandHandler parseCommands(String str, JaccsCommandHandler command)
-			throws JaccsCommandException {
-		if (!(str != null))
-			return null;
-
+	/**
+	 * takes a command string and a command handler and parses the commands, adding them to the given command handler
+	 * also store the command string with sub-commands removed
+	 * 
+	 * @param str the command string to parse
+	 * @param command 
+	 * @return the modified command handler
+	 * @throws JaccsCommandException 
+	 */
+	public static JaccsCommandHandler parseCommands(String str, JaccsCommandHandler command)throws JaccsCommandException 
+	{
+		if (!(str != null))return null;
+			
+		
 		String[] args = str.split(" ");
 		for (int i = 0; i < args.length; i++) {
-			if (args[i].startsWith(prefix)) {
+			if (args[i].startsWith(prefix)) 
+			{
 				String tempString = args[i].substring(prefix.length());
 
-				switch (tempString) {
+				switch (tempString) 
+				{
 				case "noconjunctions":
 					command.setNoConjunctions(true);
 					break;
@@ -78,11 +94,7 @@ public class JaccsCommandHandler {
 					command.addCounterNames(args[i]);
 					break;
 				case "card":
-					i += command.addName(args, i);
-					break;
 				case "arch":
-					i += command.addName(args, i);
-					break;
 				case "name":
 					i += command.addName(args, i);
 					break;
@@ -95,9 +107,12 @@ public class JaccsCommandHandler {
 				case "addword":
 					command.addWord(tempString.toLowerCase());
 				}
-			} else {
+			} 
+			else 
+			{
 				String ans = "";
-				for (int j = i; j < args.length; j++) {
+				for (int j = i; j < args.length; j++) 
+				{
 					ans = ans + args[j] + " ";
 				}
 				command.text = ans;
@@ -109,11 +124,20 @@ public class JaccsCommandHandler {
 
 	}
 
+	/**
+	 * adds a name to the list of names used in commands
+	 * 
+	 * @param args the command string split by " " 
+	 * @param i the index which the $$name etc is found
+	 * @return the index to change i to
+	 * @throws JaccsCommandException
+	 */
 	private int addName(String[] args, int i) throws JaccsCommandException {
 		String tempStrCard = "";
 		int j;
 		for (j = 1; j < args.length; j++) {
-			if (args[i + j].equalsIgnoreCase(prefix + "end")) {
+			if (args[i + j].equalsIgnoreCase(prefix + "end")) 
+			{
 				i += j;
 				this.names.add(tempStrCard.substring(0, tempStrCard.length() - 1));
 				return j;
@@ -125,9 +149,8 @@ public class JaccsCommandHandler {
 		throw (new JaccsCommandException("No end command was given"));
 	}
 
-	/**
-	 * @override
-	 */
+	
+	@Override
 	public String toString() {
 		String builder = "";
 		builder += "no reasons =" + this.noReasons;

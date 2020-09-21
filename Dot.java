@@ -8,7 +8,7 @@ public class Dot extends Command{
 	@Override
 	protected void execute(CommandEvent event) {
 		String msg="";
-		for (int i=1;i<200;i++) 
+		for (int i=0;i<200;i++) 
 		{
 			msg=msg+"..........";
 		}

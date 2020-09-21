@@ -21,8 +21,8 @@ public class Feedback extends Command{
 	
 	@Override
 	protected void execute(CommandEvent event) {
+		//stores reports by other users, if the creator calls this command it lists all reports so far. list is reset on bot updating or restarting
 		if(event.getAuthor().getIdLong()==104284192401022976L&&event.getArgs().isBlank()) event.reply(reports.toString());
-		
 		else 
 		{
 			reports.add(event.getArgs()+" -from "+event.getAuthor().getName()+" ID= " +event.getAuthor().getId()+" \n\n");

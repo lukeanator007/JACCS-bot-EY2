@@ -13,7 +13,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 public class EffectDetection extends Command{
 
 
-	private boolean conjunctionsCheck=false;
+	private boolean conjunctionsCheck=false; //used to check if any conjunctions were found in the effect
 	private boolean noConjunctions;
 	
 	
@@ -31,6 +31,10 @@ public class EffectDetection extends Command{
 		this.category=new Command.Category("Psct Help");
 	}
 	
+	/**
+	 * used to parse the commands object
+	 * @param commands JaccsCommandHandler used for this use of the command
+	 */
 	private void runCommands(JaccsCommandHandler commands) 
 	{
 		
@@ -45,7 +49,7 @@ public class EffectDetection extends Command{
 	protected void execute(CommandEvent event) {
 		
 		
-		
+		//split the text into words and parse the command
 		String text=event.getArgs();
 		
 		String[] args=text.split(" ");
@@ -91,9 +95,12 @@ public class EffectDetection extends Command{
 		}
 		catch(Exception e) 
 		{
+			// called when the substring function errors due to lack of text
 			event.reply("You have not provided an effect.");
 		}
 		
+		//get command handler
+		//TODO make this a function of a subclass
 		JaccsCommandHandler commands =JaccsCommandHandler.getCommandHandler(event.getAuthor().getIdLong());
 		try {
 			commands=JaccsCommandHandler.parseCommands(text, commands);
@@ -106,17 +113,16 @@ public class EffectDetection extends Command{
 		
 		List<String> list=new ArrayList<String>();
 		
-		
-		
-
+		//prepare for sentence split
 		text=text.replace("\n", ".");
-		text=text.replace(".)", ")).");
+		text=text.replace(".)", "))."); //lines ending with .) are marked by "))" to prevent ")" spilling over into the next line and to track them 
 		text=text.replace("..", ".");
 		
 		int refferenceIndex=0;
 		int quoteIndex=text.indexOf("\"",refferenceIndex);
 		int dotIndex=text.indexOf(".",refferenceIndex);
 		
+		//split(".") while ignoring "."s surrounded by "\"" 
 		while (dotIndex>-1) 
 		{
 			if(dotIndex<quoteIndex||(quoteIndex<0)) 
@@ -148,7 +154,7 @@ public class EffectDetection extends Command{
 		
 		List<String> effects=new ArrayList<String>();
 		
-		
+		//begin core effect check
 		String temp=null;
 		for(int i=0;i<sentences.length;i++) 
 		{
@@ -156,8 +162,9 @@ public class EffectDetection extends Command{
 			{
 				continue;
 			}
-						
-			temp=this.checkReminderText(sentences[i].toLowerCase());
+			//find effect category and call the relevant detection method
+			//TODO optimise checks
+			temp=this.checkReminderText(sentences[i].toLowerCase());//ignore lines ending in .)
 			if(!(temp!=null)) 
 			{
 				
@@ -197,7 +204,8 @@ public class EffectDetection extends Command{
 			effects.add("Note conjunctions only apply when the effect is resolving, they do not affect activation legality, in general, if a "
 					+ "part of an effect is not optional, it must be able to resolve at time of activation, but there are exceptions to this.\f");
 		}
-		
+		//reset conjunction check
+		this.conjunctionsCheck=false;
 		
 		
 		
@@ -209,27 +217,24 @@ public class EffectDetection extends Command{
 		}
 		msg+="```";
 		
-		
-		
-		while (msg.length()>1990) 
-		{
-			event.reply(msg.substring(0,msg.lastIndexOf('\f', 1990))+"```");
-			msg="```"+msg.substring(msg.lastIndexOf('\f', 1990));
-			
-		}
-		
-		
-		
-		
 		if(msg.equals("``````")) 
 		{
 			event.reply("No effects found, make sure you are using \".\" and new lines in the correct places");
 		}	
 		else 
 		{
-		event.reply(msg);			
+			//send reply msg without exceeding discord character limit and without braking up statements 
+			// /f is read by discord as blank, not as a space, so it does not affect the user end message
+			while (msg.length()>1990) 
+			{
+				event.reply(msg.substring(0,msg.lastIndexOf('\f', 1990))+"```");
+				msg="```"+msg.substring(msg.lastIndexOf('\f', 1990));
+				
+			}
+			event.reply(msg);			
 		}
-		this.conjunctionsCheck=false;
+		
+		
 		
 	}
 
@@ -247,15 +252,28 @@ public class EffectDetection extends Command{
 
 
 
-
+	/**
+	 * 
+	 * 
+	 * 
+	 * @param sentences all the sentences in the effect
+	 * @param index the index of the effect to detect
+	 * @param monster if card is a monster
+	 * @param spell if card is a spell
+	 * @param trap if card is a trap
+	 * @param cts if card is a continuous card
+	 * @return the effect detection analysis of this effect
+	 */
 	private String findBulletReason(String[] sentences, int index, boolean monster, boolean spell, boolean trap, boolean cts) 
 	{
 		String ans=null;
-		boolean test=false;
-		String line=sentences[index].substring(2).toLowerCase();
+		String line=sentences[index].substring(2).toLowerCase(); //remove bullet point from line
+		//TODO check for the thing after the bullet point and error if it is incorrect
 		boolean isFirstLine=false;
 		
 		int i=index-1;
+		boolean test=false;
+		//check the first line before all bullet points to check if it is a condition or contains the word following
 		for(;i>-1;i--) 
 		{
 			if(!sentences[i].startsWith("●")&&!sentences[i].isEmpty()) 
@@ -264,7 +282,6 @@ public class EffectDetection extends Command{
 				{
 					test=true;
 					break;
-					
 				}
 			}
 			
@@ -287,12 +304,12 @@ public class EffectDetection extends Command{
 				ans=this.effectCheck(sentences[i]+line,monster, spell, trap, cts, isFirstLine);
 				ans="("+(index+1)+") "+sentences[i]+line+".\n"+ans+"\n";
 			}
-			else if(sentences[i].indexOf("apply")<sentences[i].indexOf("effect")&&sentences[i].contains("apply")) 
+			else if(sentences[i].indexOf("apply")<sentences[i].indexOf("effect")&&sentences[i].contains("apply")) //check for "apply" some amount of these "effect(s)"
 			{
 				ans=this.getConjunctions(line);
 				ans="("+(index+1)+") "+sentences[i]+line+".\n"+ans+"\n";
 			} 
-			else if(sentences[i].indexOf("gains")<sentences[i].indexOf("effect")&&sentences[i].contains("gains")) 
+			else if(sentences[i].indexOf("gains")<sentences[i].indexOf("effect")&&sentences[i].contains("gains"))  //check for "gains" the following "effect(s)"
 			{
 				ans=this.effectCheck(line,monster, spell, trap, cts, isFirstLine);
 				ans="("+(index+1)+") "+line+".\n"+ans+"\n";
@@ -340,7 +357,12 @@ public class EffectDetection extends Command{
 	
 
 	
-	
+	/**
+	 * takes a given quick effect and returns the information about it
+	 * 
+	 * @param line the quick effect effect
+	 * @return the information about the quick effect 
+	 */
 	private String effectCheckQuickEffect(String line)
 	{
 		String ans="This effect appears to be a quick effect, it is spell speed 2, and can be activated at nearly any time. ";
@@ -363,7 +385,14 @@ public class EffectDetection extends Command{
 		return ans;
 	}
 	
-	private String triggerEffectCheck(String line, String test) 
+	/**
+	 * takes a given trigger effect and returns information about it
+	 * 
+	 * @param line the trigger effect
+	 * @param phaseCheck the phase the effect activates, or "" otherwise
+	 * @return
+	 */
+	private String triggerEffectCheck(String line, String phaseCheck) 
 	{
 		String ans="";
 		if(line.startsWith("when"))
@@ -424,8 +453,15 @@ public class EffectDetection extends Command{
 		return ans;
 	}
 	
-	
-	private String effectCheckTrapCheck(String line, String test, boolean firstLine) 
+	/**
+	 * takes a given trap card effect and returns information about it
+	 * 
+	 * @param line the trap effect
+	 * @param phase the phase of the effect, if any, or "" otherwise
+	 * @param firstLine if this effect is on the first line
+	 * @return
+	 */
+	private String effectCheckTrapCheck(String line, String phase, boolean firstLine) 
 	{
 		String ans="";
 		
@@ -436,7 +472,7 @@ public class EffectDetection extends Command{
 		{
 			if(!(line.indexOf("activate")<line.indexOf(':')&&line.contains("activate")))
 			{
-				ans=this.triggerEffectCheck(line, test);
+				ans=this.triggerEffectCheck(line, phase);
 			}
 			else 
 			{
@@ -444,9 +480,9 @@ public class EffectDetection extends Command{
 			}
 		}
 		else if(line.startsWith("durring ")&&line.indexOf(" phase")<line.indexOf(':')&&line.contains(" phase")&&
-				!(test=="main"||test=="battle")) 
+				!(phase=="main"||phase=="battle")) 
 		{
-			ans=this.triggerEffectCheck(line, test);
+			ans=this.triggerEffectCheck(line, phase);
 		}
 		else if(firstLine&&line.substring(temp).startsWith("special summon this card")) 
 		{
@@ -466,7 +502,18 @@ public class EffectDetection extends Command{
 	
 	
 	
-	
+	/**
+	 * checks a given effect and returns information about it by detecting the type of 
+	 * effect and running it through the appropriate method 
+	 * 
+	 * @param line the effect
+	 * @param mon if the card is a monster
+	 * @param spell if the  card is a spell
+	 * @param trap if the card is a trap
+	 * @param cts if the card is a continuous card
+	 * @param isFirstLine if the effect is on the first line
+	 * @return information about the effect
+	 */
 	private String effectCheck(String line, boolean mon, boolean spell, boolean trap, boolean cts, boolean isFirstLine) 
 	{
 		if(line.indexOf(" per ")<line.indexOf(':')&&line.contains(" per ")) 
@@ -474,11 +521,12 @@ public class EffectDetection extends Command{
 			line=line.substring(line.indexOf(',')+2);
 		}
 		
-		String test="";
+		String phaseCheck="";
 		try {
-			test= line.substring(line.lastIndexOf(' ', line.indexOf(" phase") - 1), line.indexOf(" phase"));
+			phaseCheck= line.substring(line.lastIndexOf(' ', line.indexOf(" phase") - 1), line.indexOf(" phase"));
 		} catch (Exception e) {
 		}
+		//get the phase if any
 		
 		String ans="\nEffect type:\n";
 		if((spell||trap)&&isFirstLine&&!cts) 
@@ -503,16 +551,16 @@ public class EffectDetection extends Command{
 				{
 					if(line.startsWith("when"))
 					{
-						ans=ans+this.triggerEffectCheck(line,test);
+						ans=ans+this.triggerEffectCheck(line,phaseCheck);
 					} 
 					else if (line.startsWith("if")&&!(line.startsWith("if you control")||line.startsWith("if this card is in your "))) 
 					{
-						ans=ans+this.triggerEffectCheck(line,test);
+						ans=ans+this.triggerEffectCheck(line,phaseCheck);
 					}
 					else if(line.startsWith("durring ")&&line.indexOf(" phase")<line.indexOf(':')&&line.contains(" phase")&&
-							test!="main") 
+							phaseCheck!="main") 
 					{
-						ans=ans+this.triggerEffectCheck(line,test);
+						ans=ans+this.triggerEffectCheck(line,phaseCheck);
 					}
 					else if(line.startsWith("you can")||line.contains(": you can "))
 					{
@@ -529,7 +577,7 @@ public class EffectDetection extends Command{
 				} 
 				else 
 				{
-					ans=ans+this.effectCheckTrapCheck(line,test, isFirstLine);
+					ans=ans+this.effectCheckTrapCheck(line,phaseCheck, isFirstLine);
 					
 				}
 				if(ans!="") 
@@ -554,21 +602,20 @@ public class EffectDetection extends Command{
 			}
 		}
 		
-		if(ans!=null) 
-		{
-			return ans+"\f";
-		}
-		else 
-		{
-			return null;
-		}
+		return ans+"\f";
 		
 		
 	}
 	
 	
 	
-	
+	/**
+	 * checks the conjunctions of a given clause and returns information about them
+	 * clauses are separated by : ; or .
+	 * 
+	 * @param clause the clause to check
+	 * @return information about each conjunction in the clause
+	 */
 	private String getConjunctions(String clause) 
 	{
 		int index=0;
@@ -638,7 +685,7 @@ public class EffectDetection extends Command{
 		}
 		
 		
-		if(ans=="") 
+		if(ans.equals("")) 
 		{
 			ans="\n\nThis effect has no conjunctions, there is only 1 part to this effect\n"+"\f";
 		}
@@ -661,10 +708,10 @@ public class EffectDetection extends Command{
 	
 	
 	/**
-	 * gets the conditions and "costs" of an activated effect
+	 * gets the conditions and costs of an activated effect
 	 * 
-	 * @param line
-	 * @return 
+	 * @param line the effect
+	 * @return information about the costs and conditions
 	 */
 	private String getCostsAndConditions(String line) 
 	{
@@ -699,7 +746,13 @@ public class EffectDetection extends Command{
 	}
 	
 
-	
+	/**
+	 * called by checkCondition
+	 * 
+	 * @param line the effect
+	 * @param check "activate" or "use"
+	 * @return information about the condition
+	 */
 	private String checkConditionCall1(String line,String check) 
 	{
 		int indexActivate1=line.indexOf("you "+check+" this");
@@ -723,7 +776,12 @@ public class EffectDetection extends Command{
 		return "";
 	}
 	
-
+	/**
+	 * checks if a given effect is a condition
+	 * 
+	 * @param line the effect to be checked
+	 * @return information about the condition if a condition is given and null otherwise
+	 */
 	private String checkCondition(String line) 
 	{
 		String ans=null;

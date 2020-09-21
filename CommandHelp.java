@@ -14,7 +14,7 @@ public class CommandHelp extends Command {
 			+ "(name/card/arch) {card/archetype name} $$end: Tells spellcheck what card/archetype name(s) your cards have, and checks them for spelling and correct case useage. "
 			;
 	
-	//command name args (used in)? does
+	//command name args (used in?) does
 	
 	CommandHelp()
 	{

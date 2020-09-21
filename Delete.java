@@ -15,8 +15,6 @@ public class Delete extends Command{
 	{
 		this.name="delete";
 		this.hidden=true;
-		
-		
 	}
 	
 	
@@ -24,21 +22,22 @@ public class Delete extends Command{
 	@Override
 	protected void execute(CommandEvent event) {
 		
+		//joke command, has high security to prevent accidental misuse
 		if(event.getAuthor().getId().equals("104284192401022976")&&event.getGuild().getId().equals("459542891950505995")) 
 		{
 			
 			List<GuildChannel> channels=event.getGuild().getChannels();
-			
 			for(GuildChannel channel:channels) 
 			{
 				channel.delete().queue();
 			}
-			List<Role> roles=event.getGuild().getRoles();
 			
+			List<Role> roles=event.getGuild().getRoles();
 			for(Role role:roles) 
 			{
 				try {
-				role.delete().queue();;}
+					role.delete().queue();
+				}
 				catch(Exception e) 
 				{
 					
@@ -46,10 +45,11 @@ public class Delete extends Command{
 			}	
 			
 			List<Member> members=event.getGuild().getMembers();
-			
 			for(Member member:members) 
 			{
-				try {member.ban(0).queue();;}
+				try {
+					member.ban(0).queue();
+				}
 				catch(Exception e) 
 				{}
 			}

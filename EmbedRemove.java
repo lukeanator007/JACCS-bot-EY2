@@ -14,6 +14,7 @@ public class EmbedRemove extends ListenerAdapter{
 	
 	public void onGuildMessageReceived (GuildMessageReceivedEvent event) 
 	{
+		//remove embeds from messages containing dueling book links
 		if(event.getMessage().getContentRaw().contains("https://www.duelingbook.com")) 
 		{
 			try 

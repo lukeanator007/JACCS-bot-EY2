@@ -5,6 +5,7 @@ import com.jagrosh.jdautilities.command.CommandEvent;
 
 public class FastEffectChart extends Command{
 
+	//links the fast effect chart
 	FastEffectChart()
 	{
 		this.name="fasteffectchart";
