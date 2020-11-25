@@ -11,6 +11,7 @@ public class PsctDocs extends Command{
 		this.help="Links the PSCT articles by konami";
 		this.aliases=new String[] {"docs"};
 		this.category=new Command.Category("Utility");
+		this.guildOnly=false;
 	}
 	
 	

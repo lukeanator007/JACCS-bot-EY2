@@ -3,15 +3,14 @@ package jaccsbot.jaccsbot;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import org.apache.commons.text.StringEscapeUtils;
+
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
 
-public class SpellCheck extends Command{
+public class SpellCheck extends PSCTCommand{
 
 	HashSet<String> wordsSet =new HashSet<String>();
-	HashSet<String> counterNames=new HashSet<String>();
-	HashSet<String> addedWords=new HashSet<String>();
-	boolean correctionsMade=false;
 	
 	SpellCheck()
 	{
@@ -37,11 +36,15 @@ public class SpellCheck extends Command{
 				"chain", "more", "sided", "lps", "sends", "wrong", "token", "cannot", "heads", "choice", "randomly", "levels", "first", "flipped", "quick", "reveal", "unequip", "before", "possession", "own", "dice", "used", 
 				"zone", "only", "from", "pointing", "combination", "otherwise", "resolves", "spell", "bottom", "sent", "water", "both", "gemini", "sequence", "effects", "twice", "transfer", "ranks", "effect", "keep", 
 				"send", "who", "link", "reveals", "their", "banished", "can", "targeting", "discards", "psychic", "value", "player", "adds", "rest", "move", "original", "also", "instead", "increase", "attacking", "listed", 
-				"currently", "third", "response", "neither", "detach,", "amount", "took", "places", "detatch", "side", "" 
+				"currently", "third", "response", "neither", "detach,", "amount", "took", "places", "detatch", "side", "detach", "decrease", "which", "case", "returned", "last", "" 
 		};
 		this.name="spellcheck";
-		this.help="Detects erorrs in spelling, as well as words that are not used in modern psct. Note this does correct spelling mistakes";
+		this.help="Detects erorrs in spelling, as well as words that are not used in modern psct. If you use a "
+				+ "decklink, it automatically adds all card names to the set of card names, as if you used $$name. "
+				+ "Note this does correct spelling mistakes";
 		this.category=new Command.Category("Psct Help");
+		this.guildOnly=false;
+		this.arguments = "<$$commands (optional)> {text OR duelingbook deckLink}";
 		
 		for(int i=0;i<wordsArr.length;i++) 
 		{
@@ -55,20 +58,24 @@ public class SpellCheck extends Command{
 	
 	
 	@Override
-	protected void execute(CommandEvent event) {
-		JaccsCommandHandler commands = null;
-		commands = JaccsCommandHandler.getCommandHandler(event.getAuthor().getIdLong());
+	protected String runCard(String str, Card card, boolean isPendulum) {
 		
-		String text = null;
-		try {
-			commands = JaccsCommandHandler.parseCommands(event.getArgs(), commands);
-			text=commands.getText();
-		} catch (JaccsCommandException e) {
-			
-			event.reply(e.getMessage());
-			return;
+		String text = this.getEffectText(str, card, isPendulum);
+		
+		HashSet<String> counterList = new HashSet<String>();
+		for(String[] arr : this.counters) 
+		{
+			for(int i=0;i<arr.length;i++) 
+			{
+				counterList.add(arr[i]);
+			}
 		}
-		text=runCommands(commands, text);
+
+		boolean correctionsMade=false;
+		
+		
+		
+		
 		String[] tempSplit=text.split("\"");//ignore text wrapped in \"
 		for(int i=0;i<tempSplit.length;i+=2) 
 		{
@@ -78,6 +85,21 @@ public class SpellCheck extends Command{
 			tempSplit[i]=tempSplit[i].replace('-', ' ');
 			tempSplit[i]=tempSplit[i].replace('/', ' ');
 		}
+		if(!this.names.isEmpty()) 
+		{
+			int index=1;
+			while(index<tempSplit.length) 
+			{
+				if(!names.contains(tempSplit[index].strip())) 
+				{
+					tempSplit[index]="**"+tempSplit[index]+"**";
+					correctionsMade=true;
+				} 
+				index+=2;
+			}
+		}
+		
+		
 		text="";
 		for(int i=0;i<tempSplit.length;i++) 
 		{
@@ -114,8 +136,7 @@ public class SpellCheck extends Command{
 			{
 				if(quoteOn) 
 				{
-					event.reply("looks like you have used quotation marks(\") incorrectly, please fix this and try again");
-					return;
+					return "looks like you have used quotation marks(\") incorrectly, please fix this and try again";
 				}
 				else 
 				{
@@ -125,12 +146,12 @@ public class SpellCheck extends Command{
 			}
 			if(temp>2) 
 			{
-				event.reply("looks like you have used quotation marks(\") incorrectly, please fix this and try again");
-				return;
+				return "looks like you have used quotation marks(\") incorrectly, please fix this and try again";
 			}
 			if(!quoteOn) 
 			{
-				if(!this.wordsSet.contains(F.letterClean(textArr[i].toLowerCase()))&&!this.counterNames.contains(F.clean(textArr[i])))
+				String comparison = F.letterClean(textArr[i].toLowerCase());
+				if(!this.wordsSet.contains(comparison)&&!counterList.contains(F.firstLetterToUpperCase(comparison)))
 				{
 					textArr[i]="**"+textArr[i]+"**";
 					correctionsMade=true;
@@ -148,77 +169,28 @@ public class SpellCheck extends Command{
 		
 		if(correctionsMade) 
 		{
-			event.reply(msg);
-			event.reply("Bold words are misspelt.");
+			msg +="\n```Bold words are misspelt or not used in modern PSCT.";
 		}
 		else 
 		{
-			event.reply("No errors found");
+			msg = "```No errors found";
 		}
-		if(text.contains("counter")&&commands.getCounterNames().isEmpty()) 
+		if(text.toLowerCase().contains("counter")&&this.counters.isEmpty()) 
 		{
-			event.reply("Counter detected, if you are using a named counter you need to use the $$counter command. e.g. \"Nitro Counters\"");
+			msg+="\nCounter detected, if you are using a named counter you need to use the $$counter command. e.g. \"$$counter Nitro\"";
 		}
 		
+		return msg + "```";
 		
-		this.resetData();
+		
 	}
+
 
 	
 
 
 
-	private void resetData() {
-		
-		this.counterNames.clear();
-		this.correctionsMade=false;
-		this.wordsSet.removeAll(addedWords);
-		this.addedWords.clear();
-		
-	}
 
-
-
-
-
-	private String runCommands(JaccsCommandHandler commands, String args) {
-		String ans=args;
-		
-		if(!commands.getNames().isEmpty()) 
-		{
-			String[] argArr=args.split("\"");
-			for(int i=1;i<argArr.length;i=i+2) 
-			{
-				if(!commands.getNames().contains(argArr[i])) 
-				{
-					argArr[i]="**"+argArr[i]+"**";
-					this.correctionsMade=true;
-				}
-			}
-			ans="";
-			for(int i=0;i<argArr.length;i++) 
-			{
-				ans+=argArr[i]+"\"";
-			}
-			ans=ans.substring(0, ans.length()-1);
-			
-		}
-		this.counterNames.addAll(commands.getCounterNames());
-		
-		for(String str:commands.getWords()) 
-		{
-			if(this.wordsSet.add(str)) 
-			{
-				this.addedWords.add(str);
-			}
-		}
-		
-		
-		
-		
-		return ans;
-		
-	}
 
 }
 

@@ -25,7 +25,7 @@ public class Meme extends ListenerAdapter{
 						+ "You seem to have made the error of capitalizing the suffix \"splain\", "
 						+ "an error one would expect of only baboons. "
 						+ "Clearly, a grammatical lesson concerning the suffix is required. "
-						+ "To define a Suffix, it is an affix occurring at the end of a word, base, or phrase. "
+						+ "To define a suffix, it is an affix occurring at the end of a word, base, or phrase. "
 						+ "Examples being \"itis\", \"ing\", \"splain\", \"able\". "
 						+ "For clarification, an affix is one or more sounds or letters occurring as a bound form attached "
 						+ "to the beginning or end of a word, base, or phrase or inserted within a word or base and serving "
@@ -33,7 +33,7 @@ public class Meme extends ListenerAdapter{
 						+ "these are syllables that are added to the end of an existing word to add to or change the meaning, "
 						+ "and become part of the word. These are not capitalized, as they are a continuation of the word. "
 						+ "I thank you for taking the time to take this lesson, and so as to not use any more of your time, "
-						+ "i ask that you please refrain from making this grammatical error in the future, else we will need "
+						+ "I ask that you please refrain from making this grammatical error in the future, else we will need "
 						+ "to teach this lesson once more.").queue();
 			}
 		}

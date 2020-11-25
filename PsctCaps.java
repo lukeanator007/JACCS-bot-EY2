@@ -18,7 +18,7 @@ import com.jagrosh.jdautilities.command.CommandEvent;
  * @author luke
  *
  */
-public class PsctCaps extends Command{
+public class PsctCaps extends PSCTCommand{
 	
 	private String[] words=new String[] {"Deck", "Tribute", "Tributed", "Tuner", "Gemini", "Toon", "Spirit", "Union",
 			"Xyz","Fusion","Link","Set","Type","Summon","Summoned","Attribute","Level","Spell","Trap","Duel", "Summoning", "Chain",
@@ -33,9 +33,9 @@ public class PsctCaps extends Command{
 	,{"Damage","Step"},{"Damage","Calculation"}	,{"Start","Step"},{"Battle","Step"},{"Spell","Card"},{"Trap","Card"}
 	,{"Monster","Card"},{"Quick","Effect)"},{"Link","Arrow"},{"Monster","Zone"},{"Main","Monster"},{"Extra","Monster"}
 	,{"Spell","&","Trap","Zone"},{"Extra","Deck"},{"Continuous","Spell"},{"Equip","Spell"},{"Field","Spell"}
-	,{"Normal","Spell"},{"Ritual","Spell"},{"Pendulum","Zone"},{"Counter","Trap"},{"Normal","Trap"},{"Continious","Trap"}
+	,{"Normal","Spell"},{"Ritual","Spell"},{"Pendulum","Zone"},{"Counter","Trap"},{"Normal","Trap"},{"Continuous","Trap"}
 	,{"Pendulum","Spell"},{"Spell","Counter"},{"Defense","Position"},{"Attack","Position"},{"Field","Zone"},{"Spell","/","Trap","Zone"}
-	,{"Quick","-","Play"}
+	,{"Quick","-","Play"},{"Equip", "Card"}
 	}; 
 	private String[] cardTypes=new String[] {"Fusion", "Synchro", "Xyz", "Link", "Pendulum", "Ritual", "Normal", "Special", 
 			 "Flip", "Effect"
@@ -61,50 +61,16 @@ public class PsctCaps extends Command{
 		this.name="psctcaps";
 		this.aliases= new String[] {"PsctCaps","PSCTcaps","psctCaps"};
 		this.help="checks cardtext for correct capital letter useage, replys with the corrected text or \"No errors found\" if no errors where found";
-		this.guildOnly=false;
-		this.arguments="<commands (optional)> {text}";
+		this.arguments="<$$commands (optional)> {text OR duelingbook deckLink}";
 		this.category=new Command.Category("Psct Help");
-		
+		this.guildOnly=false;
 	}
 	
-	private void runCommands(JaccsCommandHandler commands) 
-	{
-		//counters
-		HashSet<String> counterNames=commands.getCounterNames();
-		for(String name:counterNames) 
-		{
-			//counter names have $$ instead of spaces as specified by the command help command
-			String tempStr=name+"$$Counter";
-			String[] tempStrArr=tempStr.split("\\$\\$");
-			for(int i=0;i<tempStrArr.length;i++) 
-			{
-				tempStrArr[i]=F.firstLetterToUpperCase(tempStrArr[i].toLowerCase());
-			}
-			this.counters.add(tempStrArr);
-		}
-		
-		
-		this.noReasons=commands.isNoReasons();
-		
-		
-	}
 
-	
-	
-	
-	
-	protected void execute(CommandEvent event) 
+
+	protected String runCard(String str, Card card, boolean isPendulum) 
 	{
-		JaccsCommandHandler commands =JaccsCommandHandler.getCommandHandler(event.getAuthor().getIdLong());
-		String text = null;
-		try {
-			commands = JaccsCommandHandler.parseCommands(event.getArgs(), commands);
-		} catch (JaccsCommandException e1) {
-			event.reply(e1.getMessage());
-			return;
-		}
-		runCommands(commands);
-		text=commands.getText();
+		String text = this.getEffectText(str, card, isPendulum);
 		
 		text=text.replaceAll("\n", " \n");
 		text=text.replaceAll("-", " - ");
@@ -113,14 +79,14 @@ public class PsctCaps extends Command{
 		String[] ans= raw.clone();
 		
 		String textCheck=text.toLowerCase();
-		
+		String toReply="";
 
 		HashSet<encode> toCapsIndex=new HashSet<encode>();
 		
 		int checkNotTrap=textCheck.indexOf("this card is not treated as a trap card");
 		while(checkNotTrap>-1) 
 		{
-			int spaceCount=3;//start at the amount added due to only "not" being capsed
+			int spaceCount=3;//start at the amount added due to only "NOT" being capsed
 			for(int i=0;i<checkNotTrap;i++) 
 			{
 				if(text.charAt(i)==' ') spaceCount++;
@@ -518,8 +484,7 @@ public class PsctCaps extends Command{
 			}
 			if(temp>2) 
 			{
-				event.reply("looks like you have used quotation marks(\") incorrectly, please fix this and try again");
-				return;
+				return "looks like you have used quotation marks(\") incorrectly, please fix this and try again";
 			}
 			
 			
@@ -532,8 +497,7 @@ public class PsctCaps extends Command{
 		
 		if(quoteOn) 
 		{
-			event.reply("looks like you have used quotation marks(\") incorrectly, please fix this and try again");
-			return;
+			return "looks like you have used quotation marks(\") incorrectly, please fix this and try again";
 		}
 		
 		
@@ -652,7 +616,7 @@ public class PsctCaps extends Command{
 		
 		if(reasons.isEmpty()) 
 		{
-			event.reply("No errors found");
+			toReply+="No errors found";
 		}
 		else 
 		{
@@ -677,25 +641,30 @@ public class PsctCaps extends Command{
 				
 			}
 			
-			
+			List<String> toReplyList = new ArrayList<String>();
 			if(!this.noReasons) 
 			{
 				for(Pair<String, Integer> reason:reasons) 
 				{
-					reasonsString=reasonsString+reason.first+"\n";
+					String temp=reason.first+"\n";
+					if(!toReplyList.contains(temp)) toReplyList.add(temp);
 				}
-				event.reply(txt);
-				event.reply(reasonsString);
+				
+				for(String tempStr : toReplyList) 
+				{
+					reasonsString+= tempStr;					
+				}
+				
+				toReply+=txt+"\n";
+				toReply+="```"+reasonsString+"```";
 			}
-			
-			
-			
 		}
 		
-		resetData();
-		
+		return toReply;
 	}
-
+	
+	
+	
 
 	
 	
@@ -767,6 +736,9 @@ public class PsctCaps extends Command{
 			this.index=index;
 			this.reasonCode=reasonCode;
 		}
+		
+		
+		
 		
 
 		void toItalics() 
@@ -905,9 +877,9 @@ public class PsctCaps extends Command{
 		}
 		
 	}
-	
-	
-	
+
+
+
 }
 
 

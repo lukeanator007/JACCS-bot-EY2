@@ -10,16 +10,17 @@ import com.jagrosh.jdautilities.command.CommandEvent;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 
-public class EffectDetection extends Command{
+public class EffectDetection extends PSCTCommand{
 
 
 	private boolean conjunctionsCheck=false; //used to check if any conjunctions were found in the effect
 	private boolean noConjunctions;
-	
+	private HashSet<String> ctsCardTypes = new HashSet<String>();
+	private HashSet<String> extraDeckMonsterTypes = new HashSet<String>();
 	
 	EffectDetection()
 	{
-		
+		this.replyWrapper="```";
 		this.name="effectdetection";
 		this.aliases=new String[] {"EffectDetection", "effect detection"};
 		this.help="Attempts to detect what types of effects your card has, telling you how your effects work. Use in combination with the fast "
@@ -29,87 +30,113 @@ public class EffectDetection extends Command{
 				+ " remains on the field";
 		this.guildOnly=false;
 		this.category=new Command.Category("Psct Help");
+		
+		String[] ctsCardTypesArr= new String[] {"Continuous", "Field","Equip"};
+		
+		for(int i=0;i<ctsCardTypesArr.length;i++) 
+		{
+			this.ctsCardTypes.add(ctsCardTypesArr[i]);
+		}
+		
+		
+		String[] extraDeckMonsterTypesArr = new String[] {"Fusion", "Synchro", "Xyz", "link"};
+		
+		for(int i=0;i<extraDeckMonsterTypesArr.length;i++) 
+		{
+			this.extraDeckMonsterTypes.add(extraDeckMonsterTypesArr[i]);
+		}
+		
 	}
 	
-	/**
-	 * used to parse the commands object
-	 * @param commands JaccsCommandHandler used for this use of the command
-	 */
-	private void runCommands(JaccsCommandHandler commands) 
-	{
-		
-		
-		//conjunctions
-		this.noConjunctions=commands.isNoConjunctions();
-		
-		
-	}
+	
 	
 	@Override
-	protected void execute(CommandEvent event) {
+	protected String runCard(String str, Card card, boolean isPendulum) {
 		
 		
 		//split the text into words and parse the command
-		String text=event.getArgs();
+		String text=this.getEffectText(str, card, isPendulum);
 		
-		String[] args=text.split(" ");
 		boolean mon=false;
 		boolean spell=false;
 		boolean trap=false;
 		boolean cts=false;
 		
 		
-		try 
+		if(str!=null) 
 		{
-			if(args[0].equalsIgnoreCase("monster")) 
+			try 
 			{
-				mon=true;
-				text=text.substring(8);
+				String[] args=text.split(" ");
+				//TODO optimise spilt
+				if(args[0].equalsIgnoreCase("monster")) 
+				{
+					mon=true;
+					text=text.substring(8);
+				}
+				else if(args[0].equalsIgnoreCase("mon")) 
+				{
+					mon=true;
+					text=text.substring(4);
+				}
+				else if (args[0].equalsIgnoreCase("spell")) 
+				{
+					spell=true;
+					text=text.substring(6);
+					
+				}
+				else if (args[0].equalsIgnoreCase("trap")) 
+				{
+					trap=true;
+					text=text.substring(5);
+				}
+				else 
+				{
+					
+					return "please give a card type, monster, spell or trap";
+				}
+				if(args[1].equalsIgnoreCase("cts")) 
+				{
+					cts=true;
+					text=text.substring(4);
+				}
 			}
-			else if(args[0].equalsIgnoreCase("mon")) 
+			catch(Exception e) 
 			{
-				mon=true;
-				text=text.substring(4);
+				// called when the substring function errors due to lack of text
+				return("You have not provided an effect.");
 			}
-			else if (args[0].equalsIgnoreCase("spell")) 
+		}
+		else 
+		{
+			
+			if(isPendulum) 
 			{
 				spell=true;
-				text=text.substring(6);
-				
-			}
-			else if (args[0].equalsIgnoreCase("trap")) 
-			{
-				trap=true;
-				text=text.substring(5);
+				cts=true;
 			}
 			else 
 			{
-				event.reply("please give a card type, monster, spell or trap");
-				return;
+				mon=card.isMonster();
+				spell=card.isSpell();
+				trap=card.isTrap();
+				if(!mon) 
+				{
+					cts=this.ctsCardTypes.contains(card.getType());
+				}
+				else 
+				{
+					if(this.extraDeckMonsterTypes.contains(card.getMonsterType())) 
+					{
+						text = text.substring(text.indexOf('\n')+1);
+					}
+					
+				}
 			}
-			if(args[1].equalsIgnoreCase("cts")) 
-			{
-				cts=true;
-				text=text.substring(4);
-			}
-		}
-		catch(Exception e) 
-		{
-			// called when the substring function errors due to lack of text
-			event.reply("You have not provided an effect.");
+			
+			
 		}
 		
-		//get command handler
-		//TODO make this a function of a subclass
-		JaccsCommandHandler commands =JaccsCommandHandler.getCommandHandler(event.getAuthor().getIdLong());
-		try {
-			commands=JaccsCommandHandler.parseCommands(text, commands);
-		} catch (JaccsCommandException e) {
-			event.reply(e.getMessage());
-			return;
-		}
-		runCommands(commands);
-		text=commands.getText();
 		
 		List<String> list=new ArrayList<String>();
 		
@@ -136,8 +163,7 @@ public class EffectDetection extends Command{
 				int quoteIndex2=text.indexOf("\"", quoteIndex+1);
 				if(quoteIndex2<0) 
 				{
-					event.reply("It looks like you have used quotation marks incorrectly(\"), please correct this and try again");
-					return;
+					return "It looks like you have used quotation marks incorrectly(\"), please correct this and try again";
 				}
 				refferenceIndex=quoteIndex2+1;
 			}
@@ -208,30 +234,20 @@ public class EffectDetection extends Command{
 		this.conjunctionsCheck=false;
 		
 		
+		String msg="";
 		
-		String msg="```";
-		
-		for(String str:effects) 
+		for(String str1:effects) 
 		{
-			msg+=str;
+			msg+=str1;
 		}
-		msg+="```";
 		
-		if(msg.equals("``````")) 
+		if(msg.length()==0) 
 		{
-			event.reply("No effects found, make sure you are using \".\" and new lines in the correct places");
+			return ("No effects found, make sure you are using \".\" and new lines in the correct places");
 		}	
 		else 
 		{
-			//send reply msg without exceeding discord character limit and without braking up statements 
-			// /f is read by discord as blank, not as a space, so it does not affect the user end message
-			while (msg.length()>1990) 
-			{
-				event.reply(msg.substring(0,msg.lastIndexOf('\f', 1990))+"```");
-				msg="```"+msg.substring(msg.lastIndexOf('\f', 1990));
-				
-			}
-			event.reply(msg);			
+			return msg;			
 		}
 		
 		

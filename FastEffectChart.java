@@ -9,9 +9,10 @@ public class FastEffectChart extends Command{
 	FastEffectChart()
 	{
 		this.name="fasteffectchart";
-		this.aliases=new String[] {"fast", "fasteffect"};
-		this.help="Links the fast effect chart";
+		this.aliases=new String[] {"fast", "fasteffect", "fetc"};
+		this.help="Links the fast effect chart. You can also use \"fast\", \"fasteffect\" or \"fetc\"";
 		this.category=new Command.Category("Utility");
+		this.guildOnly=false;
 	}
 	
 	@Override

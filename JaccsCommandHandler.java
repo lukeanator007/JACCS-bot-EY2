@@ -135,7 +135,9 @@ public class JaccsCommandHandler {
 	private int addName(String[] args, int i) throws JaccsCommandException {
 		String tempStrCard = "";
 		int j;
-		for (j = 1; j < args.length; j++) {
+		for (j = 1; j < args.length; j++) 
+		{
+			if(i+j>=args.length) throw (new JaccsCommandException("Use a space before \"$$end\""));
 			if (args[i + j].equalsIgnoreCase(prefix + "end")) 
 			{
 				i += j;

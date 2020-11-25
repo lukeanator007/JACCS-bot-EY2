@@ -50,6 +50,17 @@ public class VersionChanges {
 				+ "known bugs: \n"
 				+ "j!spellcheck removes full stops \".\" from text\n"
 				+ "j!psctcaps sometimes sends lots of messages for the same error\n";
+		this.patchNotes[0][9] = "ver 0.0.9\n"
+				+"commands:\n"
+				+"psct commands can now use dueling book decklinks as arguments, proccessing each contained card in order\n"
+				+"j!effectdetection has been removed from the bot as it is outdated and buggy, it will return in a future version\n"
+				+"a reminder all psct commands function in direct messages with the bot\n"
+				+"new command: j!invite: gets a link to invite the bot\n"
+				+"bugfixes:\n"
+				+"j!psctcaps no longer sends lots of messages for the same error\n"
+				+"turns out j!feedback was broken, again. It now logs messages in a dedicated discord server, "
+				+ "hence these messages should not be lost when the host resets the bot\n"
+				+"When effect detection returns, a second command that suggests fixes will accompany it\n";
 				
 	}
 	

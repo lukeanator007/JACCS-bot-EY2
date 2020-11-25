@@ -1,26 +1,30 @@
 package jaccsbot.jaccsbot;
 
+
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URLEncoder;
 import java.util.HashSet;
 
-
+import com.gargoylesoftware.htmlunit.BrowserVersion;
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.gargoylesoftware.htmlunit.Page;
+import com.gargoylesoftware.htmlunit.WebClient;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import net.dv8tion.jda.api.entities.Guild;
 import com.jagrosh.jdautilities.command.Command;
 import com.jagrosh.jdautilities.command.CommandEvent;
+import net.dv8tion.jda.api.*;
 
 public class Testing extends Command {
 
-
+	JDA jda;
 	
-	HashSet<String> words=new HashSet<String>();
-	
-	Testing()
+	Testing(JDA jda)
 	{
+		this.jda=jda;
 		this.name="testing";
 		this.hidden=true;
 		
@@ -36,16 +40,13 @@ public class Testing extends Command {
 		}
 		
 		event.reply("testing");
+		event.reply(jda.getGuilds().toString());
 		
-		event.reply("1234\f1234\f2");
-
+		
+		
 	}
 	
-	
 
-	
-	
-	
 	
 	
 	
